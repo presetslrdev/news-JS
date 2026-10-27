@@ -10,7 +10,7 @@ const baseConfig = {
     module: {
         rules: [
             {
-                test: /.ts$/i,
+                test: /\.ts$/i,
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
