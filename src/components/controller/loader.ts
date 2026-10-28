@@ -1,21 +1,26 @@
+import { ApiOptions, Callback, Endpoint, HttpMethod, HttpStatus, QueryOptions, RequestParams } from '../../types';
+
 class Loader {
-    constructor(baseLink, options) {
+    private readonly baseLink: string;
+    private readonly options: ApiOptions;
+
+    constructor(baseLink: string, options: ApiOptions) {
         this.baseLink = baseLink;
         this.options = options;
     }
 
-    getResp(
-        { endpoint, options = {} },
-        callback = () => {
+    protected getResp<T>(
+        { endpoint, options = {} }: RequestParams,
+        callback: Callback<T> = (): void => {
             console.error('No callback for GET response');
         }
-    ) {
-        this.load('GET', endpoint, callback, options);
+    ): void {
+        this.load<T>(HttpMethod.Get, endpoint, callback, options);
     }
 
-    errorHandler(res) {
+    private errorHandler(res: Response): Response {
         if (!res.ok) {
-            if (res.status === 401 || res.status === 404)
+            if (res.status === HttpStatus.Unauthorized || res.status === HttpStatus.NotFound)
                 console.log(`Sorry, but there is ${res.status} error: ${res.statusText}`);
             throw Error(res.statusText);
         }
@@ -23,23 +28,24 @@ class Loader {
         return res;
     }
 
-    makeUrl(options, endpoint) {
-        const urlOptions = { ...this.options, ...options };
-        let url = `${this.baseLink}${endpoint}?`;
+    private makeUrl(options: QueryOptions, endpoint: Endpoint): string {
+        const urlOptions: QueryOptions = { ...this.options, ...options };
+        const query = new URLSearchParams();
 
-        Object.keys(urlOptions).forEach((key) => {
-            url += `${key}=${urlOptions[key]}&`;
+        (Object.keys(urlOptions) as Array<keyof QueryOptions>).forEach((key) => {
+            const value = urlOptions[key];
+            if (value !== undefined) query.append(key, value);
         });
 
-        return url.slice(0, -1);
+        return `${this.baseLink}${endpoint}?${query.toString()}`;
     }
 
-    load(method, endpoint, callback, options = {}) {
+    private load<T>(method: HttpMethod, endpoint: Endpoint, callback: Callback<T>, options: QueryOptions = {}): void {
         fetch(this.makeUrl(options, endpoint), { method })
-            .then(this.errorHandler)
-            .then((res) => res.json())
+            .then((res) => this.errorHandler(res))
+            .then((res) => res.json() as Promise<T>)
             .then((data) => callback(data))
-            .catch((err) => console.error(err));
+            .catch((err: unknown) => console.error(err));
     }
 }
 
