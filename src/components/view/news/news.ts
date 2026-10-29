@@ -3,7 +3,7 @@ import { Article } from '../../../types';
 import { getTemplate, requireElement } from '../../../utils/dom';
 
 const MAX_NEWS_COUNT = 10;
-const PLACEHOLDER_IMAGE = 'img/news_placeholder.jpg';
+const PLACEHOLDER_IMAGE = 'img/news_placeholder.svg';
 
 class News {
     public draw(data: readonly Article[]): void {
