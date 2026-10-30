@@ -9,6 +9,7 @@ export class AppView {
     constructor() {
         this.news = new News();
         this.sources = new Sources();
+        this.news.initControls();
     }
 
     public drawNews(data: Partial<NewsResponse>): void {
