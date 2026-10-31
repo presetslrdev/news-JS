@@ -1,4 +1,13 @@
-import { ApiOptions, Callback, Endpoint, HttpMethod, HttpStatus, QueryOptions, RequestParams } from '../../types';
+import {
+    ApiOptions,
+    Callback,
+    Endpoint,
+    ErrorCallback,
+    HttpMethod,
+    HttpStatus,
+    QueryOptions,
+    RequestParams,
+} from '../../types';
 
 class Loader {
     private readonly baseLink: string;
@@ -11,18 +20,17 @@ class Loader {
 
     protected getResp<T>(
         { endpoint, options = {} }: RequestParams,
-        callback: Callback<T> = (): void => {
-            console.error('No callback for GET response');
-        }
+        callback: Callback<T>,
+        onError: ErrorCallback = (message: string): void => console.error(message)
     ): void {
-        this.load<T>(HttpMethod.Get, endpoint, callback, options);
+        this.load<T>(HttpMethod.Get, endpoint, callback, onError, options);
     }
 
     private errorHandler(res: Response): Response {
         if (!res.ok) {
             if (res.status === HttpStatus.Unauthorized || res.status === HttpStatus.NotFound)
                 console.log(`Sorry, but there is ${res.status} error: ${res.statusText}`);
-            throw Error(res.statusText);
+            throw Error(res.statusText || `Request failed with status ${res.status}`);
         }
 
         return res;
@@ -40,12 +48,18 @@ class Loader {
         return `${this.baseLink}${endpoint}?${query.toString()}`;
     }
 
-    private load<T>(method: HttpMethod, endpoint: Endpoint, callback: Callback<T>, options: QueryOptions = {}): void {
+    private load<T>(
+        method: HttpMethod,
+        endpoint: Endpoint,
+        callback: Callback<T>,
+        onError: ErrorCallback,
+        options: QueryOptions = {}
+    ): void {
         fetch(this.makeUrl(options, endpoint), { method })
             .then((res) => this.errorHandler(res))
             .then((res) => res.json() as Promise<T>)
             .then((data) => callback(data))
-            .catch((err: unknown) => console.error(err));
+            .catch((err: unknown) => onError(err instanceof Error ? err.message : 'Unknown error'));
     }
 }
 

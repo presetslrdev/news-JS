@@ -1,22 +1,19 @@
 import AppLoader from './appLoader';
-import { Callback, Endpoint, NewsResponse, SourcesResponse } from '../../types';
+import { Callback, Endpoint, ErrorCallback, NewsResponse, SourcesResponse } from '../../types';
 
 class AppController extends AppLoader {
-    private lastSourceId: string = '';
-
-    public getSources(callback: Callback<SourcesResponse>): void {
-        super.getResp<SourcesResponse>({ endpoint: Endpoint.Sources }, callback);
+    public getSources(callback: Callback<SourcesResponse>, onError?: ErrorCallback): void {
+        super.getResp<SourcesResponse>({ endpoint: Endpoint.Sources }, callback, onError);
     }
 
-    public getNewsBySourceId(sourceId: string, callback: Callback<NewsResponse>): void {
-        if (this.lastSourceId === sourceId) return;
-        this.lastSourceId = sourceId;
+    public getNewsBySourceId(sourceId: string, callback: Callback<NewsResponse>, onError?: ErrorCallback): void {
         super.getResp<NewsResponse>(
             {
                 endpoint: Endpoint.Everything,
                 options: { sources: sourceId },
             },
-            callback
+            callback,
+            onError
         );
     }
 }

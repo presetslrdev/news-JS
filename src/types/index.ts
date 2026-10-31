@@ -57,3 +57,5 @@ export interface RequestParams {
     endpoint: Endpoint;
     options?: QueryOptions;
 }
+
+export type ErrorCallback = (message: string) => void;

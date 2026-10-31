@@ -16,7 +16,10 @@ type OnSelectCallback = (sourceId: string) => void;
 
 class Sources {
     private allSources: readonly Source[] = [];
+    private visibleSources: readonly Source[] = [];
     private activeId: string = '';
+    private highlighted: number = -1;
+    private initialized: boolean = false;
     private onSelect: OnSelectCallback | null = null;
 
     public setOnSelect(cb: OnSelectCallback): void {
@@ -25,15 +28,29 @@ class Sources {
 
     public draw(data: readonly Source[]): void {
         this.allSources = data;
-        this.renderList(data);
-        this.initDropdown();
+        this.visibleSources = data;
+        requireElement<HTMLButtonElement>('.sources__toggle').disabled = false;
+        requireElement('.sources__toggle-text').textContent = this.activeId
+            ? requireElement('.sources__toggle-text').textContent
+            : 'Select a source';
+        this.renderList();
+        if (!this.initialized) {
+            this.initDropdown();
+            this.initialized = true;
+        }
     }
 
-    private renderList(sources: readonly Source[]): void {
+    public showError(message: string): void {
+        const toggle = requireElement<HTMLButtonElement>('.sources__toggle');
+        toggle.disabled = true;
+        requireElement('.sources__toggle-text').textContent = `Sources unavailable: ${message}`;
+    }
+
+    private renderList(): void {
         const list = requireElement<HTMLUListElement>('.sources__list');
         list.innerHTML = '';
 
-        if (sources.length === 0) {
+        if (this.visibleSources.length === 0) {
             const empty = document.createElement('li');
             empty.className = 'sources__empty';
             empty.textContent = 'No sources found';
@@ -41,15 +58,18 @@ class Sources {
             return;
         }
 
-        sources.forEach((item) => {
+        this.visibleSources.forEach((item, index) => {
             const li = document.createElement('li');
-            li.className = 'source__item' + (item.id === this.activeId ? ' source__item--active' : '');
-            li.setAttribute('data-source-id', item.id);
+            li.className = 'source__item';
+            li.id = `source-option-${index}`;
+            li.dataset.sourceId = item.id;
             li.setAttribute('role', 'option');
             li.setAttribute('aria-selected', String(item.id === this.activeId));
+            li.classList.toggle('source__item--active', item.id === this.activeId);
 
             const avatar = document.createElement('span');
             avatar.className = 'source__avatar';
+            avatar.setAttribute('aria-hidden', 'true');
             avatar.textContent = item.name.charAt(0).toUpperCase();
             avatar.style.background = getAvatarColor(item.name);
 
@@ -57,74 +77,103 @@ class Sources {
             name.className = 'source__item-name';
             name.textContent = item.name;
 
-            li.appendChild(avatar);
-            li.appendChild(name);
+            li.append(avatar, name);
             list.appendChild(li);
         });
+
+        this.highlight(-1);
+    }
+
+    private highlight(index: number): void {
+        const search = requireElement<HTMLInputElement>('.sources__search');
+        const items = requireElement('.sources__list').querySelectorAll<HTMLElement>('.source__item');
+        this.highlighted = index;
+        items.forEach((el, i) => el.classList.toggle('source__item--highlight', i === index));
+
+        if (index >= 0 && items[index]) {
+            search.setAttribute('aria-activedescendant', items[index].id);
+            items[index].scrollIntoView({ block: 'nearest' });
+        } else {
+            search.removeAttribute('aria-activedescendant');
+        }
+    }
+
+    private select(source: Source): void {
+        const same = source.id === this.activeId;
+        this.activeId = source.id;
+        requireElement('.sources__toggle-text').textContent = source.name;
+        this.closeDropdown();
+        requireElement<HTMLButtonElement>('.sources__toggle').focus();
+        if (!same) this.onSelect?.(source.id);
+    }
+
+    private openDropdown(): void {
+        const search = requireElement<HTMLInputElement>('.sources__search');
+        requireElement('.sources__dropdown').classList.add('sources__dropdown--open');
+        requireElement('.sources__toggle').setAttribute('aria-expanded', 'true');
+        search.value = '';
+        this.visibleSources = this.allSources;
+        this.renderList();
+        const activeIndex = this.visibleSources.findIndex((s) => s.id === this.activeId);
+        if (activeIndex >= 0) this.highlight(activeIndex);
+        search.focus();
+    }
+
+    private closeDropdown(): void {
+        requireElement('.sources__dropdown').classList.remove('sources__dropdown--open');
+        requireElement('.sources__toggle').setAttribute('aria-expanded', 'false');
+    }
+
+    private isOpen(): boolean {
+        return requireElement('.sources__dropdown').classList.contains('sources__dropdown--open');
     }
 
     private initDropdown(): void {
         const wrapper = requireElement('.sources');
         const toggle = requireElement<HTMLButtonElement>('.sources__toggle');
-        const dropdown = requireElement('.sources__dropdown');
         const search = requireElement<HTMLInputElement>('.sources__search');
 
-        toggle.addEventListener('click', () => {
-            const isOpen = dropdown.classList.contains('sources__dropdown--open');
-            dropdown.classList.toggle('sources__dropdown--open', !isOpen);
-            toggle.setAttribute('aria-expanded', String(!isOpen));
-            if (!isOpen) {
-                search.value = '';
-                this.renderList(this.allSources);
-                search.focus();
-            }
-        });
+        toggle.addEventListener('click', () => (this.isOpen() ? this.closeDropdown() : this.openDropdown()));
 
         search.addEventListener('input', () => {
             const query = search.value.trim().toLowerCase();
-            const filtered = this.allSources.filter((s) => s.name.toLowerCase().includes(query));
-            this.renderList(filtered);
+            this.visibleSources = this.allSources.filter((s) => s.name.toLowerCase().includes(query));
+            this.renderList();
+            if (query && this.visibleSources.length > 0) this.highlight(0);
         });
 
-        // Клик по источнику — делегирование на список
-        requireElement('.sources__list').addEventListener('click', (e) => {
-            const target = (e.target as HTMLElement).closest<HTMLElement>('.source__item');
-            if (!target) return;
-            const id = target.getAttribute('data-source-id') ?? '';
-            this.setActive(id, target.querySelector<HTMLElement>('.source__item-name')?.textContent ?? id);
-            this.closeDropdown(toggle, dropdown);
-            if (id) this.onSelect?.(id);
-        });
-
-        // Закрытие по клику вне
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target as Node)) {
-                this.closeDropdown(toggle, dropdown);
+        search.addEventListener('keydown', (e) => {
+            const count = this.visibleSources.length;
+            if (e.key === 'ArrowDown' && count) {
+                e.preventDefault();
+                this.highlight((this.highlighted + 1) % count);
+            } else if (e.key === 'ArrowUp' && count) {
+                e.preventDefault();
+                this.highlight(this.highlighted <= 0 ? count - 1 : this.highlighted - 1);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const source = this.visibleSources[this.highlighted];
+                if (source) this.select(source);
             }
         });
 
-        // Закрытие по Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') this.closeDropdown(toggle, dropdown);
+        requireElement('.sources__list').addEventListener('click', (e) => {
+            if (!(e.target instanceof Element)) return;
+            const item = e.target.closest<HTMLElement>('.source__item');
+            const source = this.visibleSources.find((s) => s.id === item?.dataset.sourceId);
+            if (source) this.select(source);
         });
-    }
 
-    private setActive(id: string, label: string): void {
-        this.activeId = id;
-        requireElement('.sources__toggle-text').textContent = label;
-        // Обновляем активный класс в текущем списке
-        requireElement('.sources__list')
-            .querySelectorAll<HTMLElement>('.source__item')
-            .forEach((el) => {
-                const active = el.getAttribute('data-source-id') === id;
-                el.classList.toggle('source__item--active', active);
-                el.setAttribute('aria-selected', String(active));
-            });
-    }
+        document.addEventListener('click', (e) => {
+            if (e.target instanceof Node && !wrapper.contains(e.target)) this.closeDropdown();
+        });
 
-    private closeDropdown(toggle: HTMLButtonElement, dropdown: HTMLElement): void {
-        dropdown.classList.remove('sources__dropdown--open');
-        toggle.setAttribute('aria-expanded', 'false');
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen()) {
+                this.closeDropdown();
+                toggle.focus();
+            }
+        });
     }
 }
 
