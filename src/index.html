@@ -11,13 +11,25 @@
             <h1>News Portal</h1>
         </header>
         <main>
-            <div class="sources buttons"></div>
-            <div class="news">
-                <button class="news__btn news__btn--prev" aria-label="Previous news">&#8592;</button>
-                <div class="news__carousel-track"></div>
-                <button class="news__btn news__btn--next" aria-label="Next news">&#8594;</button>
-                <div class="news__dots"></div>
+            <div class="sources">
+                <button class="sources__toggle" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="sources__toggle-text">Select a source&hellip;</span>
+                    <span class="sources__toggle-arrow" aria-hidden="true">&#9660;</span>
+                </button>
+                <div class="sources__dropdown" role="listbox" aria-label="News sources">
+                    <div class="sources__search-wrap">
+                        <input
+                            class="sources__search"
+                            type="search"
+                            placeholder="Search sources&hellip;"
+                            aria-label="Search news sources"
+                            autocomplete="off"
+                        />
+                    </div>
+                    <ul class="sources__list"></ul>
+                </div>
             </div>
+            <div class="news"></div>
         </main>
         <footer class="footer">
             <a class="footer__github" href="https://github.com/presetslrdev" target="_blank" rel="noopener noreferrer">
