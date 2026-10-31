@@ -28,9 +28,12 @@ class Loader {
 
     private errorHandler(res: Response): Response {
         if (!res.ok) {
-            if (res.status === HttpStatus.Unauthorized || res.status === HttpStatus.NotFound)
+            if (res.status === HttpStatus.Unauthorized || res.status === HttpStatus.NotFound) {
                 console.log(`Sorry, but there is ${res.status} error: ${res.statusText}`);
-            throw Error(res.statusText || `Request failed with status ${res.status}`);
+            }
+            throw new Error(
+                res.statusText ? `${res.status}: ${res.statusText}` : `Request failed with status ${res.status}`
+            );
         }
 
         return res;
@@ -42,10 +45,15 @@ class Loader {
 
         (Object.keys(urlOptions) as Array<keyof QueryOptions>).forEach((key) => {
             const value = urlOptions[key];
-            if (value !== undefined) query.append(key, value);
+            if (value !== undefined && value !== '') {
+                query.append(key, value);
+            }
         });
 
-        return `${this.baseLink}${endpoint}?${query.toString()}`;
+        const normalizedBase = this.baseLink.endsWith('/') ? this.baseLink : `${this.baseLink}/`;
+        const queryString = query.toString();
+
+        return queryString ? `${normalizedBase}${endpoint}?${queryString}` : `${normalizedBase}${endpoint}`;
     }
 
     private load<T>(

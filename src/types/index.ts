@@ -13,6 +13,16 @@ export enum HttpStatus {
     NotFound = 404,
 }
 
+export type NewsCategory =
+    | 'all'
+    | 'business'
+    | 'entertainment'
+    | 'general'
+    | 'health'
+    | 'science'
+    | 'sports'
+    | 'technology';
+
 export interface Source {
     id: string;
     name: string;
@@ -49,7 +59,7 @@ export interface NewsResponse extends ApiResponse {
 
 export type Callback<T> = (data: T) => void;
 
-export type QueryOptions = Partial<Record<'apiKey' | 'sources', string>>;
+export type QueryOptions = Partial<Record<'apiKey' | 'sources' | 'category' | 'q', string>>;
 
 export type ApiOptions = Readonly<Pick<QueryOptions, 'apiKey'>>;
 
