@@ -1,49 +1,254 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>NewsPortal</title>
+        <meta
+            name="description"
+            content="Global Chronicle — Live wire headlines from world-class newsrooms and publications."
+        />
+        <meta name="color-scheme" content="dark" />
+        <title>Global Chronicle &mdash; Live World Headlines</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
     </head>
     <body>
-        <header>
-            <h1>News Portal</h1>
+        <header class="header">
+            <div class="header__topbar">
+                <div class="header__live-status">
+                    <span class="header__pulse" aria-hidden="true"></span>
+                    <span class="header__live-text">Live Wire Dispatch</span>
+                </div>
+                <time class="header__date" id="currentDate"></time>
+                <div class="header__edition">Global Edition</div>
+            </div>
+            <div class="header__masthead">
+                <h1 class="header__title">Global Chronicle</h1>
+                <p class="header__lead">Real-time reporting and curated headlines from verified global newsrooms</p>
+            </div>
         </header>
+
         <main>
-            <div class="sources buttons"></div>
-            <div class="news"></div>
+            <section class="controls" aria-label="Filters and sources">
+                <div class="categories" role="tablist" aria-label="News categories">
+                    <button
+                        class="category-pill category-pill--active"
+                        type="button"
+                        data-category="all"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        All
+                    </button>
+                    <button
+                        class="category-pill"
+                        type="button"
+                        data-category="general"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        General
+                    </button>
+                    <button
+                        class="category-pill"
+                        type="button"
+                        data-category="business"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Business
+                    </button>
+                    <button
+                        class="category-pill"
+                        type="button"
+                        data-category="technology"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Technology
+                    </button>
+                    <button
+                        class="category-pill"
+                        type="button"
+                        data-category="science"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Science
+                    </button>
+                    <button class="category-pill" type="button" data-category="sports" role="tab" aria-selected="false">
+                        Sports
+                    </button>
+                    <button class="category-pill" type="button" data-category="health" role="tab" aria-selected="false">
+                        Health
+                    </button>
+                    <button
+                        class="category-pill"
+                        type="button"
+                        data-category="entertainment"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Entertainment
+                    </button>
+                </div>
+
+                <div class="sources">
+                    <div class="sources__header">
+                        <label class="sources__label" id="sourcesLabel" for="sourcesToggle">Select Newsroom</label>
+                        <span class="sources__count" id="sourcesCount" aria-live="polite">Loading...</span>
+                    </div>
+                    <button
+                        id="sourcesToggle"
+                        class="sources__toggle"
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-controls="sourcesList"
+                        disabled
+                    >
+                        <span class="sources__toggle-avatar" id="sourcesToggleAvatar" aria-hidden="true">&bull;</span>
+                        <span class="sources__toggle-text">Loading sources&hellip;</span>
+                        <svg
+                            class="sources__toggle-arrow"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M3 6l5 5 5-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+                    <div class="sources__dropdown">
+                        <div class="sources__search-wrap">
+                            <svg
+                                class="sources__search-icon"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                class="sources__search"
+                                type="search"
+                                role="combobox"
+                                aria-expanded="true"
+                                aria-controls="sourcesList"
+                                placeholder="Search by newsroom name or topic&hellip;"
+                                aria-label="Search news sources"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <ul id="sourcesList" class="sources__list" role="listbox" aria-labelledby="sourcesLabel"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="news-section" aria-label="Latest headlines">
+                <div class="news-header">
+                    <div class="news-header__info">
+                        <span class="news-header__tag">Active Wire</span>
+                        <h2 class="news-header__current" id="newsCurrentSource">Pick a newsroom</h2>
+                    </div>
+                    <span class="news-header__count" id="newsArticlesCount"></span>
+                </div>
+                <div class="news" aria-live="polite"></div>
+            </section>
         </main>
-        <footer>
-            <p class="copyright">
-                Copyright <a href="https://newsapi.org">NewsAPI</a>
-            </p>
+
+        <footer class="footer">
+            <div class="footer__brand">
+                <span class="footer__name">Global Chronicle</span>
+                <span class="footer__desc">Strict TypeScript News Reader</span>
+            </div>
+            <div class="footer__links">
+                <a
+                    class="footer__github"
+                    href="https://github.com/presetslrdev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                        />
+                    </svg>
+                    presetslrdev
+                </a>
+                <span class="footer__divider" aria-hidden="true">&bull;</span>
+                <p class="copyright">
+                    2026 &middot; Powered by
+                    <a href="https://newsapi.org" target="_blank" rel="noopener noreferrer">NewsAPI</a>
+                </p>
+                <span class="footer__divider" aria-hidden="true">&bull;</span>
+                <a
+                    class="footer__logo"
+                    href="https://rs.school/courses/javascript"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="RS School JavaScript Course"
+                >
+                    <img src="https://rs.school/_next/static/media/rss-logo.c19ce1b4.svg" alt="RS School" height="32" />
+                </a>
+            </div>
         </footer>
 
-        <template id="sourceItemTemp">
-            <div class="source__item">
-                <span class="source__item-name"></span>
-            </div>
-        </template>
-
         <template id="newsItemTemp">
-            <div class="news__item">
+            <article class="news__item">
                 <div class="news__meta">
-                    <div class="news__meta-photo"></div>
-                    <ul class="news__meta-details">
-                        <li class="news__meta-author"></li>
-                        <li class="news__meta-date"></li>
-                    </ul>
+                    <div class="news__meta-photo" role="presentation"></div>
+                    <span class="news__meta-badge"></span>
                 </div>
                 <div class="news__description">
-                    <h2 class="news__description-title"></h2>
-                    <h3 class="news__description-source"></h3>
+                    <div class="news__description-header">
+                        <span class="news__description-source"></span>
+                        <span class="news__reading-time"></span>
+                    </div>
+                    <h3 class="news__description-title"></h3>
                     <p class="news__description-content"></p>
-                    <p class="news__read-more">
-                        <a href="#">Read More</a>
-                    </p>
+                    <div class="news__footer">
+                        <div class="news__byline">
+                            <span class="news__meta-author"></span>
+                            <time class="news__meta-date"></time>
+                        </div>
+                        <a class="news__read-more" href="#" target="_blank" rel="noopener noreferrer">
+                            <span>Read story</span>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M5 11l6-6M5 5h6v6" />
+                            </svg>
+                        </a>
+                    </div>
                 </div>
-            </div>
+            </article>
         </template>
     </body>
 </html>
